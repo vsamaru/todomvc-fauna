@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import {Router} from 'director';
-import logo from '../logo.svg';
-import './App.css';
 
 import TodoFooter from './Footer';
 import TodoItem from './TodoItem';
@@ -129,7 +127,6 @@ class App extends Component {
 
     return (
       <div>
-        <img src={logo} className="App-logo" alt="logo" />
         <header className="header">
           <h1>todos</h1>
           <input

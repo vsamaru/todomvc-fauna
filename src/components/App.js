@@ -88,7 +88,7 @@ class App extends Component {
           onEdit={this.edit.bind(this, todo)}
           editing={this.state.editing === todo.id}
           onSave={this.save.bind(this, todo)}
-          onCancel={this.cancel}
+          onCancel={this.cancel.bind(this)}
         />
       );
     }, this);
@@ -105,7 +105,7 @@ class App extends Component {
           count={activeTodoCount}
           completedCount={completedCount}
           nowShowing={this.state.nowShowing}
-          onClearCompleted={this.clearCompleted}
+          onClearCompleted={this.clearCompleted.bind(this)}
         />;
     }
 
@@ -115,7 +115,7 @@ class App extends Component {
           <input
             className="toggle-all"
             type="checkbox"
-            onChange={this.toggleAll}
+            onChange={this.toggleAll.bind(this)}
             checked={activeTodoCount === 0}
           />
           <ul className="todo-list">

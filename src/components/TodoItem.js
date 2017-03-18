@@ -1,4 +1,5 @@
-import React, {ReactDOM} from 'react';
+import React from 'react';
+import ReactDOM from 'react-dom';
 import classNames from 'classnames';
 
 var ESCAPE_KEY = 27;

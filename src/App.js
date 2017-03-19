@@ -3,6 +3,7 @@ import {Router} from 'director';
 
 import TodoFooter from './Footer';
 import TodoItem from './TodoItem';
+import Login from './Login';
 import {ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS} from './utils'
 
 const ENTER_KEY = 13;
@@ -11,7 +12,8 @@ class App extends Component {
   state = {
       nowShowing: ALL_TODOS,
       editing: null,
-      newTodo: ''
+      newTodo: '',
+      auth : {}
   }
   componentDidMount () {
     var setState = this.setState;
@@ -61,6 +63,12 @@ class App extends Component {
   }
   clearCompleted () {
     this.props.model.clearCompleted();
+  }
+  onAuthChange(auth) {
+    this.setState({auth})
+  }
+  onError(error) {
+    this.setState({error})
   }
   render () {
     var footer;
@@ -129,6 +137,7 @@ class App extends Component {
       <div>
         <header className="header">
           <h1>todos</h1>
+          <Login onError={this.onError.bind(this)} auth={this.state.auth} onAuthChange={this.onAuthChange.bind(this)} />
           <input
             className="new-todo"
             placeholder="What needs to be done?"

@@ -1,5 +1,5 @@
 import React from 'react';
-import Utils, {ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS} from '../utils'
+import Utils, {ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS} from './utils'
 import classNames from 'classnames';
 
 const TodoFooter = React.createClass({

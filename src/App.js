@@ -3,7 +3,7 @@ import {Router} from 'director';
 
 import TodoFooter from './Footer';
 import TodoItem from './TodoItem';
-import {ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS} from '../utils'
+import {ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS} from './utils'
 
 const ENTER_KEY = 13;
 

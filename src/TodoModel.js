@@ -1,80 +1,121 @@
-import Utils from './utils'
+// import fetch from 'fetch'
+
+const todosEndpoint = 'https://lb3gtcvf9f.execute-api.us-east-1.amazonaws.com/dev';
 
 
-	// Generic "model" object. You can use whatever
-	// framework you want. For this application it
-	// may not even be worth separating this logic
-	// out, but we do this to demonstrate one way to
-	// separate out parts of your application.
-const TodoModel = function (key) {
-	this.key = key;
-	this.todos = Utils.store(key);
-	this.onChanges = [];
+export default class TodoModel {
+	constructor (key) {
+		this.key = key;
+		this.todos = [];
+		this.auth = {}
+		this.onChanges = [];
+	}
+	subscribe(onChange) {
+		this.onChanges.push(onChange);
+	}
+	inform() {
+		this.getServerTodos().then(()=>{
+			this.onChanges.forEach(function (cb) { cb(); });
+		})
+	}
+	onAuthChange (auth, reload) {
+		this.auth = auth;
+		console.log("auth", auth, reload)
+		if (reload) {
+			this.inform()
+		}
+	}
+	makeRequest(id, verb, body, count) {
+		if (typeof count === 'undefined') {
+			count = 2
+		}
+		if (count < 1) {
+			return Promise.reject("too many retries")
+		}
+		if (!this.auth.authorization_token) {
+			if (this.auth.doRefresh) {
+				return this.auth.doRefresh().then(()=> {
+					return this.makeRequest(id, verb, body, count -1)
+				});
+			} else {
+				return Promise.reject("no auth")
+			}
+		}
+		var path = todosEndpoint+"/todos";
+		if (id) {
+			path += "/" + id;
+		}
+		var options = {
+			method : verb,
+			headers : {
+				Authorization : this.auth.authorization_token
+			}
+		}
+		if (body) {
+			options.body = JSON.stringify(body)
+		}
+		console.log("makeRequest", options)
+		return fetch(path, options).then((ok)=>{
+			var contentType = ok.headers.get("content-type");
+  		if(contentType && contentType.indexOf("application/json") !== -1) {
+				return ok.json().then((data) => {
+					return data;
+				}).catch((e) => ok)
+			} else {
+				return ok;
+			}
+		}).then((ok) => {
+			console.log("ok", ok)
+			return ok;
+		}).catch((e) => {
+			console.log('fetch error', e)
+			return this.auth.doRefresh().then(()=> {
+				return this.makeRequest(id, verb, body, count -1)
+			});
+		});
+	}
+	getServerTodos() {
+		return this.makeRequest(null, 'GET').then((r) => {this.todos = r.data;})
+	}
+	addTodo(title) {
+		var newTodo = {
+			title: title,
+			completed: false
+		}
+		this.makeRequest(null, 'POST', newTodo).then((r) => {
+			this.inform()
+		})
+	}
+	toggleAll(checked) {
+		return this.makeRequest('toggle', 'POST').then((r) => {
+			this.inform();
+		})
+	}
+	toggle(todoToToggle) {
+		var id = todoToToggle.ref["@ref"].split('/').pop();
+		console.log("todoToToggle", todoToToggle)
+		todoToToggle.data.completed = !todoToToggle.data.completed;
+		this.makeRequest(id, 'PUT', todoToToggle.data).then((r) => {
+			this.inform()
+		})
+	}
+	destroy(todo) {
+		var id = todo.ref["@ref"].split('/').pop();
+		this.makeRequest(id, 'DELETE').then((r) => {
+			this.inform()
+		})
+	}
+	save(todoToSave, text) {
+		var id = todoToSave.ref["@ref"].split('/').pop();
+		console.log("todoToSave", todoToSave)
+		todoToSave.data.title = text;
+		this.makeRequest(id, 'PUT', todoToSave.data).then((r) => {
+			this.inform()
+		})
+	}
+	clearCompleted() {
+		return this.makeRequest('clear', 'POST').then((r) => {
+			this.inform();
+		})
+	}
 };
-
-TodoModel.prototype.subscribe = function (onChange) {
-	this.onChanges.push(onChange);
-};
-
-TodoModel.prototype.inform = function () {
-	Utils.store(this.key, this.todos);
-	this.onChanges.forEach(function (cb) { cb(); });
-};
-
-TodoModel.prototype.addTodo = function (title) {
-	this.todos = this.todos.concat({
-		id: Utils.uuid(),
-		title: title,
-		completed: false
-	});
-
-	this.inform();
-};
-
-TodoModel.prototype.toggleAll = function (checked) {
-	// Note: it's usually better to use immutable data structures since they're
-	// easier to reason about and React works very well with them. That's why
-	// we use map() and filter() everywhere instead of mutating the array or
-	// todo items themselves.
-	this.todos = this.todos.map(function (todo) {
-		return Utils.extend({}, todo, {completed: checked});
-	});
-
-	this.inform();
-};
-
-TodoModel.prototype.toggle = function (todoToToggle) {
-	this.todos = this.todos.map(function (todo) {
-		return todo !== todoToToggle ?
-			todo :
-			Utils.extend({}, todo, {completed: !todo.completed});
-	});
-
-	this.inform();
-};
-
-TodoModel.prototype.destroy = function (todo) {
-	this.todos = this.todos.filter(function (candidate) {
-		return candidate !== todo;
-	});
-
-	this.inform();
-};
-
-TodoModel.prototype.save = function (todoToSave, text) {
-	this.todos = this.todos.map(function (todo) {
-		return todo !== todoToSave ? todo : Utils.extend({}, todo, {title: text});
-	});
-
-	this.inform();
-};
-
-TodoModel.prototype.clearCompleted = function () {
-	this.todos = this.todos.filter(function (todo) {
-		return !todo.completed;
-	});
-
-	this.inform();
-};
-
-export default TodoModel;

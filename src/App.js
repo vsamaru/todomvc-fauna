@@ -52,7 +52,7 @@ class App extends Component {
     this.props.model.destroy(todo);
   }
   edit (todo) {
-    this.setState({editing: todo.id});
+    this.setState({editing: todo.ref});
   }
   save (todoToSave, text) {
     this.props.model.save(todoToSave, text);
@@ -64,8 +64,9 @@ class App extends Component {
   clearCompleted () {
     this.props.model.clearCompleted();
   }
-  onAuthChange(auth) {
+  onAuthChange(auth, reload) {
     this.setState({auth})
+    this.props.model.onAuthChange(auth, reload);
   }
   onError(error) {
     this.setState({error})
@@ -78,9 +79,9 @@ class App extends Component {
     var shownTodos = todos.filter(function (todo) {
       switch (this.state.nowShowing) {
       case ACTIVE_TODOS:
-        return !todo.completed;
+        return !todo.data.completed;
       case COMPLETED_TODOS:
-        return todo.completed;
+        return todo.data.completed;
       default:
         return true;
       }
@@ -89,12 +90,12 @@ class App extends Component {
     var todoItems = shownTodos.map(function (todo) {
       return (
         <TodoItem
-          key={todo.id}
-          todo={todo}
+          key={todo.ref["@ref"]}
+          todo={todo.data}
           onToggle={this.toggle.bind(this, todo)}
           onDestroy={this.destroy.bind(this, todo)}
           onEdit={this.edit.bind(this, todo)}
-          editing={this.state.editing === todo.id}
+          editing={this.state.editing === todo.ref}
           onSave={this.save.bind(this, todo)}
           onCancel={this.cancel.bind(this)}
         />
@@ -102,7 +103,7 @@ class App extends Component {
     }, this);
 
     var activeTodoCount = todos.reduce(function (accum, todo) {
-      return todo.completed ? accum : accum + 1;
+      return (todo.data && todo.data.completed) ? accum : accum + 1;
     }, 0);
 
     var completedCount = todos.length - activeTodoCount;

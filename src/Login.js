@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+// import fetch from 'fetch'
 
 const authenticationEndpoint = 'https://x1lh61dmmd.execute-api.us-east-1.amazonaws.com/dev';
 
@@ -45,19 +46,32 @@ class Login extends Component {
       var aToken = query.authorization_token || '';
       var rToken = query.refresh_token || '';
       saveTokens(aToken, rToken);
-      window.history.replaceState({authorization_token: ''}, document.title, '/');
     }
-    this.authorized()
+    window.history.replaceState({authorization_token: ''}, document.title, '/');
+    this.authorized(true)
   }
   doRefresh() {
     // called from the model when the is an auth error
     console.log("doRefresh")
+    const refreshToken = getTokens().refresh_token;
+    if (refreshToken) {
+      return fetch(authenticationEndpoint + '/authentication/refresh/' + refreshToken).then((r)=>{
+        return r.json().then((data) => {
+          if (data.errorMessage) {
+            this.props.onError(data.errorMessage);
+          } else {
+            saveTokens(data.authorization_token, data.refresh_token);
+            this.authorized();
+          }
+        })
+      })
+    }
   }
-  authorized() {
+  authorized(reload) {
     var tokens = getTokens();
     if (tokens.authorization_token) {
       tokens.doRefresh = this.doRefresh.bind(this)
-      this.props.onAuthChange(tokens)
+      this.props.onAuthChange(tokens, reload)
     } else {
       this.props.onAuthChange({})
     }
@@ -67,7 +81,7 @@ class Login extends Component {
 		return (
 			<div>
         {this.props.auth.authorization_token ?
-          <a href="logout">Logout</a> :
+          <a href="?error=logout">Logout</a> :
           <a href={authURL}>Login with Facebook</a> }
       </div>
 		);

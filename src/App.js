@@ -17,6 +17,7 @@ const ActivityIndicator = (props) => <div style={{
         "Error" :
         "Loading...") :
       ""}
+      {props.error ? JSON.stringify(props.error) : ''}
   </div>
 
 class App extends Component {
@@ -154,7 +155,7 @@ class App extends Component {
       />;
     return (
       <div>
-        <ActivityIndicator active={this.props.model.active}/>
+        <ActivityIndicator error={this.state.error} active={this.props.model.active}/>
         <header className="header">
           <h1>todos</h1>
           <Login model={this.props.model} onError={this.onError.bind(this)} auth={this.state.auth} onAuthChange={this.onAuthChange.bind(this)} />

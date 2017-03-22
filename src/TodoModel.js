@@ -1,4 +1,4 @@
-const request = require('superagent');
+// const request = require('superagent');
 
 const todosEndpoint = process.env.NODE_ENV === "production" ?
   'https://krmk0hfoo5.execute-api.us-east-1.amazonaws.com/prod'  :
@@ -10,14 +10,21 @@ export default class TodoModel {
 		this.todos = [];
 		this.auth = {}
 		this.onChanges = [];
+		this.active = false;
 	}
 	subscribe(onChange) {
 		this.onChanges.push(onChange);
 	}
-	inform() {
-		this.getServerTodos().then(()=>{
-			this.onChanges.forEach(function (cb) { cb(); });
-		})
+	inform(reload = true) {
+		if (reload) {
+			this.getServerTodos().then(()=>{
+				this.onChanges.forEach(function (cb) { cb(); });
+			})
+		} else {
+			Promise.resolve("ok").then(() => {
+				this.onChanges.forEach(function (cb) { cb(); });
+			})
+		}
 	}
 	onAuthChange (auth, reload) {
 		this.auth = auth;
@@ -26,7 +33,22 @@ export default class TodoModel {
 			this.inform()
 		}
 	}
-	makeRequest(id, verb, body, count) {
+	isActive(is) {
+		console.log('isActive', is);
+		this.active = is
+		this.inform(false)
+	}
+	makeRequest(id, verb, body) {
+		this.isActive(true);
+		return this.doMakeRequest(id, verb, body).then((ok)=>{
+			this.isActive(false);
+			return ok;
+		}).catch((e) => {
+			this.isActive('error');
+			throw e;
+		})
+	}
+	doMakeRequest(id, verb, body, count) {
 		if (typeof count === 'undefined') {
 			count = 2
 		}
@@ -100,7 +122,7 @@ export default class TodoModel {
 	}
 	toggleAll(checked) {
 		return this.makeRequest('toggle', 'POST').then((r) => {
-			// this.inform();
+			this.inform();
 		})
 	}
 	toggle(todoToToggle) {

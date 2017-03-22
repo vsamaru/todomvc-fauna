@@ -59,7 +59,9 @@ class Login extends Component {
     console.log("doRefresh")
     const refreshToken = getTokens().refresh_token;
     if (refreshToken) {
+      this.props.model.isActive(true);
       return fetch(authenticationEndpoint + '/authentication/refresh/' + refreshToken).then((r)=>{
+        this.props.model.isActive(false);
         return r.json().then((data) => {
           if (data.errorMessage) {
             this.props.onError(data.errorMessage);
@@ -68,6 +70,9 @@ class Login extends Component {
             this.authorized();
           }
         })
+      }).catch((e)=>{
+        this.props.model.isActive('error');
+        throw e;
       })
     }
   }

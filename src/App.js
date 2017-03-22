@@ -8,6 +8,17 @@ import {ALL_TODOS, ACTIVE_TODOS, COMPLETED_TODOS} from './utils'
 
 const ENTER_KEY = 13;
 
+const ActivityIndicator = (props) => <div style={{
+  color:props.active === "error" ? 'red' : 'white',
+  padding: '12px',
+  float:'right'}}>
+    {props.active ?
+      (props.active === "error" ?
+        "Error" :
+        "Loading...") :
+      ""}
+  </div>
+
 class App extends Component {
   state = {
       nowShowing: ALL_TODOS,
@@ -133,20 +144,21 @@ class App extends Component {
         </section>
       );
     }
-
+    const inputArea = <input
+        className="new-todo"
+        placeholder="What needs to be done?"
+        value={this.state.newTodo}
+        onKeyDown={this.handleNewTodoKeyDown.bind(this)}
+        onChange={this.handleChange.bind(this)}
+        autoFocus={true}
+      />;
     return (
       <div>
+        <ActivityIndicator active={this.props.model.active}/>
         <header className="header">
           <h1>todos</h1>
-          <Login onError={this.onError.bind(this)} auth={this.state.auth} onAuthChange={this.onAuthChange.bind(this)} />
-          <input
-            className="new-todo"
-            placeholder="What needs to be done?"
-            value={this.state.newTodo}
-            onKeyDown={this.handleNewTodoKeyDown.bind(this)}
-            onChange={this.handleChange.bind(this)}
-            autoFocus={true}
-          />
+          <Login model={this.props.model} onError={this.onError.bind(this)} auth={this.state.auth} onAuthChange={this.onAuthChange.bind(this)} />
+          {this.state.auth.authorization_token ? inputArea : ''}
         </header>
         {main}
         {footer}

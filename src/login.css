@@ -1,0 +1,24 @@
+.fbLogin {
+  margin-left: 4px;
+}
+
+.fbLogo {
+  display:inline-block;
+  background-image: url("./fb.svg");
+  height: 26px;
+  width: 26px;
+  margin-right:4px;
+  position: relative;
+  top:8px;
+}
+
+.Login {
+  background: #4c69ba;
+  background: linear-gradient(#4c69ba, #3b55a0);
+  color: white;
+  padding-bottom:10px;
+  margin-bottom: 10px;
+}
+.Login a {
+  color: white;
+}

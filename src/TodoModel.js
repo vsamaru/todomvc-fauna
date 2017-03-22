@@ -1,7 +1,8 @@
-// import fetch from 'fetch'
+const request = require('superagent');
 
-const todosEndpoint = 'https://lb3gtcvf9f.execute-api.us-east-1.amazonaws.com/dev';
-
+const todosEndpoint = process.env.NODE_ENV === "production" ?
+  'https://krmk0hfoo5.execute-api.us-east-1.amazonaws.com/prod'  :
+  'https://lb3gtcvf9f.execute-api.us-east-1.amazonaws.com/dev';
 
 export default class TodoModel {
 	constructor (key) {
@@ -48,13 +49,22 @@ export default class TodoModel {
 		var options = {
 			method : verb,
 			headers : {
-				Authorization : this.auth.authorization_token
+				Authorization : this.auth.authorization_token,
+				'Content-Type' : 'application/json'
 			}
 		}
 		if (body) {
 			options.body = JSON.stringify(body)
 		}
 		console.log("makeRequest", options)
+		// var req = request(verb, path)
+		// 	.type('application/json')
+		// 	.set('Authorization', this.auth.authorization_token);
+		// if (body) {
+		// 	req.send(body)
+		// }
+		// return req
+
 		return fetch(path, options).then((ok)=>{
 			var contentType = ok.headers.get("content-type");
   		if(contentType && contentType.indexOf("application/json") !== -1) {
@@ -64,7 +74,9 @@ export default class TodoModel {
 			} else {
 				return ok;
 			}
-		}).then((ok) => {
+		})
+
+		.then((ok) => {
 			console.log("ok", ok)
 			return ok;
 		}).catch((e) => {
@@ -88,14 +100,17 @@ export default class TodoModel {
 	}
 	toggleAll(checked) {
 		return this.makeRequest('toggle', 'POST').then((r) => {
-			this.inform();
+			// this.inform();
 		})
 	}
 	toggle(todoToToggle) {
 		var id = todoToToggle.ref["@ref"].split('/').pop();
 		console.log("todoToToggle", todoToToggle)
 		todoToToggle.data.completed = !todoToToggle.data.completed;
-		this.makeRequest(id, 'PUT', todoToToggle.data).then((r) => {
+		// return this.auth.doRefresh().then(()=> {
+		// 	return this.makeRequest(id, verb, body, count -1)
+		// });
+		return this.makeRequest(id, 'PUT', todoToToggle.data).then((r) => {
 			this.inform()
 		})
 	}

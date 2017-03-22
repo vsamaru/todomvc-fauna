@@ -1,7 +1,9 @@
 import React, {Component} from 'react';
-// import fetch from 'fetch'
+import './login.css'
 
-const authenticationEndpoint = 'https://x1lh61dmmd.execute-api.us-east-1.amazonaws.com/dev';
+const authenticationEndpoint = process.env.NODE_ENV === "production" ?
+  'https://v23ym3h4j1.execute-api.us-east-1.amazonaws.com/prod'  :
+  'https://x1lh61dmmd.execute-api.us-east-1.amazonaws.com/dev';
 
 function getQueryParams(qs) {
   qs = qs.split('+').join(' ');
@@ -38,16 +40,18 @@ function getTokens() {
 
 class Login extends Component {
   componentWillMount() {
-    var query = getQueryParams(document.location.search);
+    var clearPath = true, query = getQueryParams(document.location.search);
     if (query.error) {
       clearTokens();
       this.props.onError(query.error);
+    } else if (query.authorization_token || query.refresh_token)  {
+      saveTokens(query.authorization_token, query.refresh_token);
     } else {
-      var aToken = query.authorization_token || '';
-      var rToken = query.refresh_token || '';
-      saveTokens(aToken, rToken);
+      clearPath = false
     }
-    window.history.replaceState({authorization_token: ''}, document.title, '/');
+    if (clearPath) {
+      window.history.replaceState({authorization_token: ''}, document.title, '/todomvc-fauna/');
+    }
     this.authorized(true)
   }
   doRefresh() {
@@ -79,10 +83,10 @@ class Login extends Component {
 	render () {
     const authURL = authenticationEndpoint + '/authentication/signin/facebook';
 		return (
-			<div>
+			<div className="Login">
         {this.props.auth.authorization_token ?
-          <a href="?error=logout">Logout</a> :
-          <a href={authURL}>Login with Facebook</a> }
+          <a href="?error=logout" className="fbLogin"><div className="fbLogo"></div>Logout</a> :
+          <a href={authURL} className="fbLogin"><div className="fbLogo"></div>Login with Facebook</a> }
       </div>
 		);
 	}

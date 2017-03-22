@@ -13,6 +13,6 @@ function render() {
     document.getElementsByClassName('todoapp')[0]
   );
 }
-
+window._model = model;
 model.subscribe(render);
 render();

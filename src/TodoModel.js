@@ -34,7 +34,7 @@ export default class TodoModel {
 		}
 	}
 	isActive(is) {
-		console.log('isActive', is);
+		// console.log('isActive', is);
 		this.active = is
 		this.inform(false)
 	}

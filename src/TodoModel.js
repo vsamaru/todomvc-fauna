@@ -7,7 +7,7 @@ export default class TodoModel {
 	constructor (key) {
 		this.key = key;
 		this.todos = [];
-		this.auth = {}
+		// this.auth = {}
 		this.onChanges = [];
 		this.active = false; // todo add observer to client
 	}
@@ -26,7 +26,9 @@ export default class TodoModel {
 		}
 	}
 	onAuthChange (auth, reload) {
-		this.auth = auth;
+    this.client = new faunadb.Client({
+      secret: auth.faunadb_secret
+    });
 		console.log("auth", auth, reload)
 		if (reload) {
 			this.inform()
@@ -38,7 +40,7 @@ export default class TodoModel {
 		this.inform(false)
 	}
 	getServerTodos() {
-		return client.query(
+		return this.client.query(
       q.Map(
         q.Paginate(q.Match(q.Ref("indexes/all_todos"))),
         (ref) => q.Get(ref))).then((r) => {this.todos = r.data;})
@@ -50,7 +52,7 @@ export default class TodoModel {
 		}
     const me = q.Select("ref", q.Get(q.Ref("classes/users/self")));
     newTodo.user = me;
-    return client.query(q.Create(q.Ref("classes/todos"), {
+    return this.client.query(q.Create(q.Ref("classes/todos"), {
       newTodo,
       permissions : {
         read : me,
@@ -61,7 +63,7 @@ export default class TodoModel {
 		})
 	}
 	toggleAll(checked) {
-    return client.query(
+    return this.client.query(
       q.Map(
         q.Paginate(q.Match(q.Ref("indexes/all_todos"))),
         (ref) => q.Update(q.Select("ref", q.Get(ref)),
@@ -73,7 +75,7 @@ export default class TodoModel {
 	}
 	toggle(todoToToggle) {
 		console.log("todoToToggle", todoToToggle)
-    client.query(q.Update(todoToToggle.ref,
+    return this.client.query(q.Update(todoToToggle.ref,
         { data : {
           completed : !todoToToggle.data.completed,
         }})).then((r) => {
@@ -81,14 +83,14 @@ export default class TodoModel {
 		})
 	}
 	destroy(todo) {
-    return client.query(q.Delete(todo.ref)).then(() => this.inform());
+    return this.client.query(q.Delete(todo.ref)).then(() => this.inform());
 	}
 	save(todoToSave, text) {
-    return client.query(q.Update(todoToSave.ref),
+    return this.client.query(q.Update(todoToSave.ref),
       {data : todoToSave.data}).then((r) => this.inform());
 	}
 	clearCompleted() {
-    return client.query(
+    return this.client.query(
       q.Map(
         q.Paginate(q.Match(q.Ref("indexes/all_todos"))),
         (ref) => q.If(q.Select(["data", "completed"], q.Get(ref)),

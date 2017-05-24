@@ -17,24 +17,29 @@ function getQueryParams(qs) {
   return params;
 }
 
-function saveTokens(authorization_token, refresh_token) {
+function saveTokens(authorization_token, refresh_token, faunadb_secret) {
   if(authorization_token) {
     localStorage.setItem('authorization_token', authorization_token);
   }
   if(refresh_token) {
     localStorage.setItem('refresh_token', refresh_token);
   }
+  if(faunadb_secret) {
+    localStorage.setItem('faunadb_secret', faunadb_secret);
+  }
 }
 
 function clearTokens() {
   localStorage.removeItem('authorization_token');
   localStorage.removeItem('refresh_token');
+  localStorage.removeItem('faunadb_secret');
 }
 
 function getTokens() {
   return {
     authorization_token: localStorage.getItem('authorization_token'),
-    refresh_token: localStorage.getItem('refresh_token')
+    refresh_token: localStorage.getItem('refresh_token'),
+    faunadb_secret: localStorage.getItem('faunadb_secret')
   }
 }
 
@@ -44,8 +49,8 @@ class Login extends Component {
     if (query.error) {
       clearTokens();
       this.props.onError(query.error);
-    } else if (query.authorization_token || query.refresh_token)  {
-      saveTokens(query.authorization_token, query.refresh_token);
+    } else if (query.authorization_token || query.refresh_token || query.faunadb)  {
+      saveTokens(query.authorization_token, query.refresh_token, query.faunadb);
     } else {
       clearPath = false
     }
@@ -66,7 +71,7 @@ class Login extends Component {
           if (data.errorMessage) {
             this.props.onError(data.errorMessage);
           } else {
-            saveTokens(data.authorization_token, data.refresh_token);
+            saveTokens(data.authorization_token, data.refresh_token, data.faunadb);
             this.authorized();
           }
         })

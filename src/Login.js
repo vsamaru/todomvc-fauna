@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import './login.css'
 
+// const FAUNADB_CLIENT_SECRET = "replace me";
+
 function saveTokens(faunadb_secret) {
   if(faunadb_secret) {
     localStorage.setItem('faunadb_secret', faunadb_secret);
@@ -44,13 +46,32 @@ class Login extends Component {
   doShownForm(e) {
     this["do"+this.state.show](e)
   }
-  doLogin () {
-    // saveTokens(faunadb);
+  doLogin (e) {
+    e.preventDefault();
+    console.log(this.state)
+    publicClient.query(q.Login(q.Match(q.Index("users_by_login"), this.state.login), {
+        password : this.state.password
+    })).then((key) => {
+      saveTokens(key.secret);
+      this.authorized(true);
+    })
   }
   ["doSign Up"] (e) {
     e.preventDefault();
     console.log(this.state)
-    return false;
+    publicClient.query(q.Create(q.Class("users"), {
+      credentials : {
+        password : this.state.password
+      },
+      data {
+        login : this.state.login
+      }
+    })).then(() => publicClient.query(q.Login(q.Match(q.Index("users_by_login"), this.state.login), {
+        password : this.state.password
+    }))).then((key) => {
+      saveTokens(key.secret);
+      this.authorized(true);
+    });
   }
   doLogout () {
     // remove credentials and refresh model

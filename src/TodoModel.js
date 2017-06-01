@@ -26,10 +26,11 @@ export default class TodoModel {
 		}
 	}
 	onAuthChange (auth, reload) {
+		this.todos = [];
     this.client = new faunadb.Client({
       secret: auth.faunadb_secret
     });
-		console.log("auth", auth, reload)
+		console.log("onAuthChange", auth, reload)
 		if (reload) {
 			this.inform()
 		}
@@ -43,7 +44,10 @@ export default class TodoModel {
 		return this.client.query(
       q.Map(
         q.Paginate(q.Match(q.Ref("indexes/all_todos"))),
-        (ref) => q.Get(ref))).then((r) => {this.todos = r.data;})
+        (ref) => q.Get(ref))).then((r) => {
+					console.log("getServerTodos", r)
+					this.todos = r.data;
+				})
 	}
 	addTodo(title) {
 		var newTodo = {
@@ -53,7 +57,7 @@ export default class TodoModel {
     const me = q.Select("ref", q.Get(q.Ref("classes/users/self")));
     newTodo.user = me;
     return this.client.query(q.Create(q.Ref("classes/todos"), {
-      newTodo,
+      data: newTodo,
       permissions : {
         read : me,
         write : me

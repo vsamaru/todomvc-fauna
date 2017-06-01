@@ -1,9 +1,14 @@
 import React, {Component} from 'react';
 import './login.css'
 
-// const FAUNADB_CLIENT_SECRET = "replace me";
+import faunadb, {query as q} from 'faunadb';
+
+const publicClient = new faunadb.Client({
+  secret: FAUNADB_CLIENT_SECRET
+});
 
 function saveTokens(faunadb_secret) {
+  console.log("saveTokens", faunadb_secret)
   if(faunadb_secret) {
     localStorage.setItem('faunadb_secret', faunadb_secret);
   }
@@ -14,6 +19,7 @@ function clearTokens() {
 }
 
 function getTokens() {
+  console.log("getTokens", localStorage.getItem('faunadb_secret'))
   return {
     faunadb_secret: localStorage.getItem('faunadb_secret')
   }
@@ -23,6 +29,8 @@ class Login extends Component {
   state = {
   }
   componentWillMount() {
+    // check for login code
+    this.authorized(true);
   }
   doRefresh() {
     // called from the model when the is an auth error
@@ -36,6 +44,7 @@ class Login extends Component {
     } else {
       this.props.onAuthChange({})
     }
+    this.setState({show:""});
   }
   signup () {
     this.setState({show:"Sign Up"});
@@ -59,14 +68,19 @@ class Login extends Component {
   ["doSign Up"] (e) {
     e.preventDefault();
     console.log(this.state)
-    publicClient.query(q.Create(q.Class("users"), {
-      credentials : {
-        password : this.state.password
-      },
-      data {
-        login : this.state.login
-      }
-    })).then(() => publicClient.query(q.Login(q.Match(q.Index("users_by_login"), this.state.login), {
+    publicClient.query(
+      q.Create(q.Class("users"), {
+        credentials : {
+          password : this.state.password
+        },
+        // permissions : {
+          // read : q.Select("ref", q.Get(q.Ref("classes/users/self")))
+        // }
+        data : {
+          login : this.state.login
+        }
+    })).then(() => publicClient.query(
+      q.Login(q.Match(q.Index("users_by_login"), this.state.login), {
         password : this.state.password
     }))).then((key) => {
       saveTokens(key.secret);
@@ -95,7 +109,7 @@ class Login extends Component {
 		return (
 			<div className="Login">
         {this.props.auth.faunadb_secret ?
-          <a onClick={this.doLogout}>Logout</a> :
+          <a onClick={this.doLogout.bind(this)}>Logout</a> :
           actionForm
         }
       </div>

@@ -22,3 +22,6 @@
 .Login a {
   color: white;
 }
+.Login form input, .Login form button {
+  margin:0 5px;
+}

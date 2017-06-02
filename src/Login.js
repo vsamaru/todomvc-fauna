@@ -53,10 +53,10 @@ class Login extends Component {
     this.setState({show:"Login"});
   }
   doShownForm(e) {
-    this["do"+this.state.show](e)
-  }
-  doLogin (e) {
     e.preventDefault();
+    this["do"+this.state.show]()
+  }
+  doLogin () {
     console.log(this.state)
     publicClient.query(q.Login(q.Match(q.Index("users_by_login"), this.state.login), {
         password : this.state.password
@@ -65,8 +65,7 @@ class Login extends Component {
       this.authorized(true);
     })
   }
-  ["doSign Up"] (e) {
-    e.preventDefault();
+  ["doSign Up"] () {
     console.log(this.state)
     publicClient.query(
       q.Create(q.Class("users"), {
@@ -95,12 +94,17 @@ class Login extends Component {
   onChange(name, event) {
     this.setState({[name]: event.target.value});
   }
+  goBack(e) {
+    e.preventDefault();
+    this.setState({show : ""});
+  }
 	render () {
     var actionForm = <span>
         <a onClick={this.login.bind(this)}>Login</a> or <a onClick={this.signup.bind(this)}>Sign Up</a>
       </span>;
     if (this.state.show) {
       actionForm = <form>
+        <a onClick={this.goBack.bind(this)}>&lt;&nbsp;</a>
         <input onChange={this.onChange.bind(this, "login")} type="text" name="login"></input>
         <input onChange={this.onChange.bind(this, "password")} type="password" name="password"></input>
         <button onClick={this.doShownForm.bind(this)} type="submit">{this.state.show}</button>

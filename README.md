@@ -1,3 +1,5 @@
+[Here is a companion example where the backend is pure FaunaDB, without Lambda](https://github.com/fauna/todomvc-fauna-spa). No more cold start!
+
 # React TodoMVC Example
 
 > React is a JavaScript library for creating user interfaces. Its core principles are declarative code, efficiency, and flexibility. Simply specify what your component looks like and React will keep it up-to-date when the underlying data changes.
